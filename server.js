@@ -17,7 +17,7 @@ const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 
-const PORT     = 8080;
+const PORT = process.env.PORT || 8080;
 const WEB_ROOT = path.join(__dirname, 'web');
 const DATA_DIR = path.join(__dirname, 'data');
 
