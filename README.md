@@ -105,14 +105,13 @@ No `npm install` needed — zero external dependencies!
 ## 📸 Screenshots
 
 ### 🏠 Landing Page
-> Glassmorphism hero with live stats and animated background
+![Landing Page](screenshots/landing.png)
 
 ### 📋 Dashboard
-> 4-step progress tracker with real-time completion status
+![Dashboard](screenshots/dashboard.png)
 
 ### 💳 Payment Page
-> Dynamic payment method switching (Card / UPI / Net Banking)
-
+![Payment](screenshots/payment.png)
 ---
 
 ## 🔒 Security Features
