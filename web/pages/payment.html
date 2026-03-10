@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Payment</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.pay-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+@media(max-width:800px){.pay-layout{grid-template-columns:1fr}}
+
+.order-summary{
+  background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);padding:26px;
+}
+.order-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:.88rem;color:var(--txt-2)}
+.order-row:last-child{border-bottom:none;color:var(--txt);font-weight:600;font-size:1rem;padding-top:14px}
+.order-row span:last-child{color:var(--txt)}
+.order-total span:last-child{color:var(--accent);font-family:'Syne',sans-serif;font-size:1.1rem}
+
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pay-method{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:16px 12px;border:1px solid var(--input-border);
+  border-radius:var(--radius-sm);cursor:pointer;
+  transition:all .2s;background:var(--input-bg);
+  font-size:.82rem;color:var(--txt-2);font-weight:500;
+  position:relative;
+}
+.pay-method:hover{border-color:var(--accent);color:var(--txt)}
+.pay-method:has(input:checked){border-color:var(--accent);background:rgba(79,156,249,.1);color:var(--txt)}
+.pay-method input{position:absolute;opacity:0;width:0;height:0}
+.pay-method .pm-icon{font-size:1.6rem}
+
+.success-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(4,9,26,.92);backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+}
+.success-overlay.show{opacity:1;pointer-events:all}
+.success-box{
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);padding:52px 48px;
+  text-align:center;max-width:440px;width:90%;
+  box-shadow:var(--glass-shadow);
+}
+.success-icon{font-size:3.5rem;margin-bottom:16px}
+.txn-chip{
+  display:inline-block;padding:8px 18px;border-radius:8px;
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);
+  color:var(--success);font-size:.85rem;font-family:'Syne',sans-serif;
+  margin:16px 0;letter-spacing:.05em;
+}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap" style="padding-top:110px;padding-bottom:60px">
+  <div class="card card-lg">
+
+    <div class="mb-8">
+      <div class="pill">Step 4 of 4</div>
+      <h2 class="section-title">Payment</h2>
+      <p class="subtitle">Complete your application fee to finalise your submission.</p>
+    </div>
+
+    <div class="steps mb-8">
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Personal</div></div>
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Education</div></div>
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Documents</div></div>
+      <div class="step active"><div class="step-num">4</div><div class="step-label">Payment</div></div>
+    </div>
+
+    <div class="pay-layout">
+
+      <!-- Left: Form -->
+      <form id="pay-form" onsubmit="submitPayment(event)">
+        <div style="display:flex;flex-direction:column;gap:20px">
+
+          <div class="f-section">
+            <div class="f-section-title">Billing Details</div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input name="fullName" id="pay-name" type="text" class="form-control" placeholder="Name as on card" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address *</label>
+                <input name="email" id="pay-email" type="email" class="form-control" placeholder="you@example.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Amount (₹) *</label>
+                <input name="amount" type="number" class="form-control" value="2500" min="1" required id="pay-amount" oninput="updateSummary()">
+              </div>
+            </div>
+          </div>
+
+          <div class="f-section">
+            <div class="f-section-title">Payment Method</div>
+            <div class="method-grid">
+              <label class="pay-method">
+                <input type="radio" name="paymentMethod" value="Credit Card" checked onchange="methodChanged(this)">
+                <span class="pm-icon">💳</span>Credit Card
+              </label>
+              <label class="pay-method">
+                <input type="radio" name="paymentMethod" value="Debit Card" onchange="methodChanged(this)">
+                <span class="pm-icon">🏧</span>Debit Card
+              </label>
+              <label class="pay-method">
+                <input type="radio" name="paymentMethod" value="UPI" onchange="methodChanged(this)">
+                <span class="pm-icon">📱</span>UPI
+              </label>
+              <label class="pay-method">
+                <input type="radio" name="paymentMethod" value="Net Banking" onchange="methodChanged(this)">
+                <span class="pm-icon">🏦</span>Net Banking
+              </label>
+            </div>
+          </div>
+
+          <!-- Card fields (shown for card methods) -->
+          <div id="card-fields" style="display:flex;flex-direction:column;gap:16px">
+            <div class="form-group">
+              <label class="form-label">Card Number</label>
+              <input name="cardNumber" type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Expiry (MM/YY)</label>
+                <input name="expiry" type="text" class="form-control" placeholder="08 / 28" maxlength="7">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CVV</label>
+                <input name="cvv" type="password" class="form-control" placeholder="•••" maxlength="4">
+              </div>
+            </div>
+          </div>
+
+          <!-- UPI field -->
+          <div id="upi-field" style="display:none">
+            <div class="form-group">
+              <label class="form-label">UPI ID</label>
+              <input name="upiId" type="text" class="form-control" placeholder="yourname@paytm or @gpay">
+            </div>
+          </div>
+
+          <!-- Net Banking -->
+          <div id="nb-field" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Select Bank</label>
+              <select name="bank" class="form-control">
+                <option>SBI — State Bank of India</option>
+                <option>HDFC Bank</option>
+                <option>ICICI Bank</option>
+                <option>Axis Bank</option>
+                <option>Kotak Mahindra Bank</option>
+                <option>Punjab National Bank</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none">
+            <button type="submit" class="btn btn-primary" id="btn-pay">Pay Now →</button>
+            <button type="reset"  class="btn btn-secondary">Reset</button>
+            <a href="/pages/documents.html" class="btn btn-ghost">← Back</a>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- Right: Order Summary -->
+      <div>
+        <div class="order-summary">
+          <h4 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:18px">Order Summary</h4>
+          <div class="order-row"><span>Application Fee</span><span>₹ 2,000</span></div>
+          <div class="order-row"><span>Processing Fee</span><span>₹ 500</span></div>
+          <div class="order-row"><span>GST (18%)</span><span id="gst-amt">₹ 450</span></div>
+          <div class="order-row order-total"><span>Total</span><span id="total-amt">₹ 2,500</span></div>
+          <div style="margin-top:18px;padding:12px;background:rgba(79,156,249,.07);border-radius:9px;font-size:.78rem;color:var(--txt-2)">
+            🔒 Your payment is secured and encrypted by the Java backend.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:14px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:10px;font-size:.8rem;color:var(--txt-2)">
+          ✓ Processed via Java 21 HttpServer<br>
+          ✓ Transaction ID generated server-side<br>
+          ✓ Data saved to JSON persistence layer
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Success Overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-box">
+    <div class="success-icon">🎉</div>
+    <h3 style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:8px">Payment Successful!</h3>
+    <p style="color:var(--txt-2);font-size:.9rem;line-height:1.6">Your application has been submitted successfully. Check your email for the confirmation.</p>
+    <div class="txn-chip" id="txn-id">TXN — —</div>
+    <p style="font-size:.8rem;color:var(--txt-3);margin-bottom:24px">Save this Transaction ID for your records.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="/pages/dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+      <a href="/index.html" class="btn btn-secondary">Home</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const user = Auth.required();
+buildNav();
+
+// Pre-fill from logged in user
+if (user) {
+  document.getElementById('pay-name').value  = user.name  || '';
+  document.getElementById('pay-email').value = user.email || '';
+}
+
+function updateSummary() {
+  const amt    = parseFloat(document.getElementById('pay-amount').value) || 0;
+  // FIX 8: Recalculate GST dynamically based on entered amount (18% of base)
+  const base   = Math.round(amt / 1.18);        // back-calculate base from total
+  const gst    = amt - base;
+  document.getElementById('gst-amt').textContent   = '₹ ' + gst.toLocaleString('en-IN');
+  document.getElementById('total-amt').textContent = '₹ ' + amt.toLocaleString('en-IN');
+}
+
+function methodChanged(radio) {
+  const isCard = ['Credit Card','Debit Card'].includes(radio.value);
+  const cardEl = document.getElementById('card-fields');
+  const upiEl  = document.getElementById('upi-field');
+  const nbEl   = document.getElementById('nb-field');
+
+  // FIX: use display style directly to preserve flex layout
+  cardEl.style.display = isCard                      ? 'flex' : 'none';
+  upiEl.style.display  = radio.value === 'UPI'       ? 'block': 'none';
+  nbEl.style.display   = radio.value === 'Net Banking'? 'block': 'none';
+}
+
+function formatCard(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+async function submitPayment(e) {
+  e.preventDefault();
+  const data = collectForm('pay-form');
+
+  // FIX 12: Explicitly exclude card details from server payload (never send raw card data)
+  // Card data (number, CVV, expiry) stays client-side only — in production, use Stripe/Razorpay
+  const payload = {
+    fullName:      data.fullName,
+    email:         data.email,
+    amount:        data.amount,
+    paymentMethod: data.paymentMethod
+  };
+
+  const btn = document.getElementById('btn-pay');
+  setLoading(btn, true);
+  try {
+    const res = await apiPost('/payment', payload);
+    if (res.status === 'ok') {
+      Progress.mark('payment');
+      document.getElementById('txn-id').textContent = res.txnId || 'TXN-SUCCESS';
+      document.getElementById('success-overlay').classList.add('show');
+    } else {
+      toast(res.message || 'Payment failed', 'err');
+    }
+  } catch {
+    toast('Server error — is the Java backend running?', 'err');
+  } finally { setLoading(btn, false) }
+}
+</script>
+</body>
+</html>

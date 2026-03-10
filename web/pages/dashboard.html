@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Dashboard</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.welcome-text{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--txt)}
+.welcome-sub{font-size:.9rem;color:var(--txt-2);margin-top:3px}
+.server-chip{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 14px;
+  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);
+  border-radius:100px;font-size:.76rem;color:var(--success);
+}
+.server-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+.progress-bar-wrap{margin-bottom:28px}
+.progress-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--txt-2);margin-bottom:8px}
+.progress-bar{height:5px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#4f9cf9,#a78bfa);transition:width .6s var(--ease)}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap wrap-wide" style="max-width:1000px;margin:0 auto">
+  <div class="card card-lg" style="max-width:100%">
+
+    <!-- Header -->
+    <div class="dash-header">
+      <div>
+        <div class="welcome-text">Good day, <span id="user-name">Applicant</span> 👋</div>
+        <div class="welcome-sub">Complete all sections to finish your application.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="server-chip"><span class="dot"></span>Java 21 Server Live</div>
+        <span id="app-id" class="badge badge-pending" style="font-size:.75rem"></span>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stat-row" id="stat-row">
+      <div class="stat"><div class="stat-val" id="s-users">—</div><div class="stat-key">Total Users</div></div>
+      <div class="stat"><div class="stat-val" id="s-forms">—</div><div class="stat-key">Forms Filed</div></div>
+      <div class="stat"><div class="stat-val" id="s-pay">—</div><div class="stat-key">Payments</div></div>
+      <div class="stat"><div class="stat-val" id="s-pct">0%</div><div class="stat-key">Your Progress</div></div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Application Progress</span>
+        <span id="prog-lbl">0 / 4 completed</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <!-- Dashboard cards -->
+    <div class="dash-grid">
+
+      <div class="dash-card" onclick="go('personal.html')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div class="card-ico ico-blue">👤</div>
+          <span class="badge" id="b-personal">Pending</span>
+        </div>
+        <div class="card-name">Personal Information</div>
+        <div class="card-info">Your identity, contact, and address details. Required for your application record.</div>
+        <div class="card-go">Fill Form <span>→</span></div>
+      </div>
+
+      <div class="dash-card" onclick="go('education.html')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div class="card-ico ico-purple">🎓</div>
+          <span class="badge" id="b-education">Pending</span>
+        </div>
+        <div class="card-name">Education Details</div>
+        <div class="card-info">Academic qualifications, institutions attended, degrees and results.</div>
+        <div class="card-go">Fill Form <span>→</span></div>
+      </div>
+
+      <div class="dash-card" onclick="go('documents.html')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div class="card-ico ico-green">📄</div>
+          <span class="badge" id="b-documents">Pending</span>
+        </div>
+        <div class="card-name">Document Upload</div>
+        <div class="card-info">Upload your passport photo, ID proof, marksheets and degree certificate.</div>
+        <div class="card-go">Upload Files <span>→</span></div>
+      </div>
+
+      <div class="dash-card" onclick="go('payment.html')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div class="card-ico ico-amber">💳</div>
+          <span class="badge" id="b-payment">Pending</span>
+        </div>
+        <div class="card-name">Payment</div>
+        <div class="card-info">Complete your application fee payment via Credit/Debit Card, UPI or Net Banking.</div>
+        <div class="card-go">Pay Now <span>→</span></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const user = Auth.required();
+if (user) {
+  buildNav('dashboard');
+  document.getElementById('user-name').textContent = user.name.split(' ')[0];
+  if (user.id) document.getElementById('app-id').textContent = 'ID: ' + user.id;
+}
+
+function go(page) { location.href = '/pages/' + page }
+
+// Update badge status from Progress tracker
+function refreshBadges() {
+  const steps = ['personal','education','documents','payment'];
+  let done = 0;
+  steps.forEach(k => {
+    const b = document.getElementById('b-' + k);
+    if (Progress.done(k)) {
+      b.textContent = 'Complete ✓';
+      b.className   = 'badge badge-done';
+      done++;
+    } else {
+      b.textContent = 'Pending';
+      b.className   = 'badge badge-pending';
+    }
+  });
+  const pct = Math.round((done / steps.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-lbl').textContent  = done + ' / ' + steps.length + ' completed';
+  document.getElementById('s-pct').textContent     = pct + '%';
+}
+refreshBadges();
+
+// Load live server stats
+apiGet('/status').then(d => {
+  if (!d.data) return;
+  document.getElementById('s-users').textContent = d.data.registeredUsers  || 0;
+  document.getElementById('s-forms').textContent = (d.data.personalForms || 0) + (d.data.educationForms || 0);
+  document.getElementById('s-pay').textContent   = d.data.payments || 0;
+}).catch(() => {
+  ['s-users','s-forms','s-pay'].forEach(id => document.getElementById(id).textContent = '0');
+});
+</script>
+</body>
+</html>

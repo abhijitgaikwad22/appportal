@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Education Details</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap" style="padding-top:110px;padding-bottom:60px">
+  <div class="card card-lg">
+
+    <div class="mb-8">
+      <div class="pill">Step 2 of 4</div>
+      <h2 class="section-title">Education Details</h2>
+      <p class="subtitle">Provide your academic qualifications and institutional background.</p>
+    </div>
+
+    <div class="steps mb-8">
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Personal</div></div>
+      <div class="step active"><div class="step-num">2</div><div class="step-label">Education</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-label">Documents</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-label">Payment</div></div>
+    </div>
+
+    <form id="edu-form" onsubmit="submitEdu(event)">
+
+      <div class="f-section">
+        <div class="f-section-title">Highest Qualification</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Degree / Qualification *</label>
+            <select name="degree" class="form-control" required>
+              <option value="">Select degree</option>
+              <option>High School (10th)</option>
+              <option>Intermediate (12th)</option>
+              <option>Bachelor's Degree (B.Tech / B.Sc / B.A / B.Com)</option>
+              <option>Master's Degree (M.Tech / M.Sc / M.A / MBA)</option>
+              <option>Ph.D / Doctorate</option>
+              <option>Diploma</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Field of Study / Stream *</label>
+            <input name="fieldOfStudy" type="text" class="form-control" placeholder="e.g. Computer Science, Commerce" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Institution / College Name *</label>
+            <input name="institution" type="text" class="form-control" placeholder="e.g. IIT Mumbai, Delhi University" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Board / University *</label>
+            <input name="university" type="text" class="form-control" placeholder="e.g. CBSE, Mumbai University, Anna University" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Date *</label>
+            <input name="startDate" type="month" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date / Expected Graduation *</label>
+            <input name="endDate" type="month" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Grade / Percentage / CGPA *</label>
+            <input name="grade" type="text" class="form-control" placeholder="e.g. 8.5 CGPA or 85%" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Grading Type</label>
+            <div class="radio-group">
+              <label class="radio-opt"><input type="radio" name="gradingType" value="CGPA"> CGPA</label>
+              <label class="radio-opt"><input type="radio" name="gradingType" value="Percentage"> Percentage</label>
+              <label class="radio-opt"><input type="radio" name="gradingType" value="Grade"> Grade (A/B/C)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="f-section">
+        <div class="f-section-title">Additional Qualifications (Optional)</div>
+        <div class="grid-2">
+          <div class="form-group full">
+            <label class="form-label">Other Certifications / Courses</label>
+            <input name="certifications" type="text" class="form-control" placeholder="e.g. AWS Certified, Google Analytics, PMP">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Achievements / Awards</label>
+            <input name="achievements" type="text" class="form-control" placeholder="e.g. Gold Medalist, Best Student Award">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btn-submit">Save &amp; Continue →</button>
+        <button type="reset"  class="btn btn-secondary">Reset</button>
+        <a href="/pages/personal.html" class="btn btn-ghost">← Back</a>
+        <a href="/pages/dashboard.html" class="btn btn-ghost">Dashboard</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.required();
+buildNav();
+
+// FIX 14: Reflect actual Progress state in steps bar (not hardcoded)
+(function() {
+  const stepEl = document.querySelector('.step:first-child');
+  if (stepEl && !Progress.done('personal')) {
+    stepEl.classList.remove('done');
+    stepEl.querySelector('.step-num').textContent = '1';
+  }
+})();
+
+async function submitEdu(e) {
+  e.preventDefault();
+  const data = collectForm('edu-form');
+
+  // FIX 9: Validate that graduation date is not before enrollment date
+  if (data.startDate && data.endDate && data.endDate < data.startDate) {
+    toast('End date cannot be before start date', 'err');
+    return;
+  }
+
+  const btn  = document.getElementById('btn-submit');
+  setLoading(btn, true);
+  try {
+    const res = await apiPost('/education', data);
+    if (res.status === 'ok') {
+      Progress.mark('education');
+      toast('Education details saved!', 'ok');
+      setTimeout(() => location.href = '/pages/documents.html', 900);
+    } else {
+      toast(res.message || 'Save failed', 'err');
+    }
+  } catch {
+    toast('Server error — is the Java backend running?', 'err');
+  } finally { setLoading(btn, false) }
+}
+</script>
+</body>
+</html>

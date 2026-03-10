@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Document Upload</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-bottom:28px}
+.doc-card{
+  background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);padding:22px;
+  display:flex;flex-direction:column;gap:14px;
+  transition:all .22s var(--ease);
+}
+.doc-card.uploaded{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.04)}
+.doc-icon{font-size:2.2rem;text-align:center}
+.doc-name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;text-align:center}
+.doc-hint{font-size:.77rem;color:var(--txt-3);text-align:center}
+.file-status{
+  font-size:.78rem;text-align:center;padding:6px 12px;
+  border-radius:100px;font-weight:500;
+  background:rgba(255,255,255,.05);color:var(--txt-3);
+  transition:all .2s;
+}
+.file-status.done{background:rgba(52,211,153,.12);color:var(--success)}
+.upload-label{
+  display:block;cursor:pointer;
+  padding:9px;border-radius:8px;
+  border:1px solid var(--input-border);
+  background:var(--input-bg);
+  font-size:.82rem;color:var(--accent);text-align:center;
+  transition:all .2s;
+}
+.upload-label:hover{background:rgba(79,156,249,.1);border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap" style="padding-top:110px;padding-bottom:60px">
+  <div class="card card-lg">
+
+    <div class="mb-8">
+      <div class="pill">Step 3 of 4</div>
+      <h2 class="section-title">Document Upload</h2>
+      <p class="subtitle">Upload clear scans or photos of the required documents (JPG, PNG, PDF — max 5MB each).</p>
+    </div>
+
+    <div class="steps mb-8">
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Personal</div></div>
+      <div class="step done"><div class="step-num">✓</div><div class="step-label">Education</div></div>
+      <div class="step active"><div class="step-num">3</div><div class="step-label">Documents</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-label">Payment</div></div>
+    </div>
+
+    <div class="doc-grid" id="doc-grid">
+
+      <!-- Passport Photo -->
+      <div class="doc-card" id="card-photo">
+        <div class="doc-icon">🖼️</div>
+        <div class="doc-name">Passport Photo</div>
+        <div class="doc-hint">Recent colour photo, white background, JPG/PNG</div>
+        <label class="upload-label" for="f-photo">📎 Choose File</label>
+        <input type="file" id="f-photo" accept="image/*" class="hidden" onchange="fileSelected(this,'card-photo','status-photo')">
+        <div class="file-status" id="status-photo">No file selected</div>
+      </div>
+
+      <!-- ID Proof -->
+      <div class="doc-card" id="card-id">
+        <div class="doc-icon">🪪</div>
+        <div class="doc-name">ID Proof</div>
+        <div class="doc-hint">Aadhar Card, PAN, Passport or Driving Licence</div>
+        <label class="upload-label" for="f-id">📎 Choose File</label>
+        <input type="file" id="f-id" accept="image/*,application/pdf" class="hidden" onchange="fileSelected(this,'card-id','status-id')">
+        <div class="file-status" id="status-id">No file selected</div>
+      </div>
+
+      <!-- 10th Marksheet -->
+      <div class="doc-card" id="card-10th">
+        <div class="doc-icon">📑</div>
+        <div class="doc-name">10th Marksheet</div>
+        <div class="doc-hint">Secondary school final result / certificate</div>
+        <label class="upload-label" for="f-10th">📎 Choose File</label>
+        <input type="file" id="f-10th" accept="image/*,application/pdf" class="hidden" onchange="fileSelected(this,'card-10th','status-10th')">
+        <div class="file-status" id="status-10th">No file selected</div>
+      </div>
+
+      <!-- 12th Marksheet -->
+      <div class="doc-card" id="card-12th">
+        <div class="doc-icon">📋</div>
+        <div class="doc-name">12th Marksheet</div>
+        <div class="doc-hint">Higher secondary / intermediate result</div>
+        <label class="upload-label" for="f-12th">📎 Choose File</label>
+        <input type="file" id="f-12th" accept="image/*,application/pdf" class="hidden" onchange="fileSelected(this,'card-12th','status-12th')">
+        <div class="file-status" id="status-12th">No file selected</div>
+      </div>
+
+      <!-- Degree Certificate -->
+      <div class="doc-card" id="card-deg">
+        <div class="doc-icon">🎓</div>
+        <div class="doc-name">Degree Certificate</div>
+        <div class="doc-hint">Provisional or final degree / diploma certificate</div>
+        <label class="upload-label" for="f-deg">📎 Choose File</label>
+        <input type="file" id="f-deg" accept="image/*,application/pdf" class="hidden" onchange="fileSelected(this,'card-deg','status-deg')">
+        <div class="file-status" id="status-deg">No file selected</div>
+      </div>
+
+    </div>
+
+    <!-- Upload counter -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <span class="text-sm" id="upload-count">0 / 5 files selected</span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-success" onclick="uploadAll()" id="btn-upload">Upload All →</button>
+        <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+        <a href="/pages/education.html" class="btn btn-ghost">← Back</a>
+        <a href="/pages/dashboard.html" class="btn btn-ghost">Dashboard</a>
+      </div>
+    </div>
+
+    <div style="padding:14px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);border-radius:10px;font-size:.82rem;color:var(--txt-2)">
+      ⚠️ <strong style="color:var(--warning)">Note:</strong> File uploads are tracked locally. In production, the Java backend would handle multipart form uploads and store files on the server filesystem.
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.required();
+buildNav();
+
+// FIX 15: Reflect actual Progress state in steps bar (not hardcoded as done)
+(function() {
+  const stepEls = document.querySelectorAll('.step');
+  const keys = ['personal', 'education'];
+  keys.forEach((key, i) => {
+    if (!Progress.done(key)) {
+      stepEls[i].classList.remove('done');
+      stepEls[i].querySelector('.step-num').textContent = i + 1;
+    }
+  });
+})();
+
+const selected = {};
+
+function fileSelected(input, cardId, statusId) {
+  const file   = input.files[0];
+  const status = document.getElementById(statusId);
+  const card   = document.getElementById(cardId);
+  if (!file) return;
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+  if (file.size > 5 * 1024 * 1024) {
+    toast('File too large (max 5MB): ' + file.name, 'err');
+    input.value = '';                        // FIX: clear invalid file input
+    delete selected[cardId];                 // FIX: remove from selected map
+    status.textContent = 'No file selected';
+    status.classList.remove('done');
+    card.classList.remove('uploaded');
+    updateCounter();
+    return;
+  }
+
+  selected[cardId] = file;
+  status.textContent  = `✓ ${file.name} (${sizeMB} MB)`;
+  status.classList.add('done');
+  card.classList.add('uploaded');
+
+  updateCounter();
+}
+
+function updateCounter() {
+  const n = Object.keys(selected).length;
+  document.getElementById('upload-count').textContent = n + ' / 5 files selected';
+}
+
+function uploadAll() {
+  const n = Object.keys(selected).length;
+  if (n === 0) { toast('Please select at least one file', 'err'); return; }
+
+  const btn = document.getElementById('btn-upload');
+  setLoading(btn, true);
+
+  // Simulate upload (in production: POST multipart/form-data to Java backend)
+  setTimeout(() => {
+    Progress.mark('documents');
+    toast(n + ' document(s) uploaded successfully!', 'ok');
+    setLoading(btn, false);
+    setTimeout(() => location.href = '/pages/payment.html', 1000);
+  }, 1800);
+}
+
+function resetAll() {
+  document.querySelectorAll('input[type="file"]').forEach(el => el.value = '');
+  document.querySelectorAll('.file-status').forEach(el => { el.textContent = 'No file selected'; el.classList.remove('done') });
+  document.querySelectorAll('.doc-card').forEach(el => el.classList.remove('uploaded'));
+  Object.keys(selected).forEach(k => delete selected[k]);
+  updateCounter();
+}
+</script>
+</body>
+</html>

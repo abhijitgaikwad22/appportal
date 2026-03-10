@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Personal Information</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap" style="padding-top:110px;padding-bottom:60px">
+  <div class="card card-lg">
+
+    <div class="mb-8">
+      <div class="pill">Step 1 of 4</div>
+      <h2 class="section-title">Personal Information</h2>
+      <p class="subtitle">Fill in your identity, contact, and address details accurately.</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps mb-8">
+      <div class="step active"><div class="step-num">1</div><div class="step-label">Personal</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-label">Education</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-label">Documents</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-label">Payment</div></div>
+    </div>
+
+    <form id="personal-form" onsubmit="submitPersonal(event)">
+
+      <!-- Section 1: Basic Identity -->
+      <div class="f-section">
+        <div class="f-section-title">Basic Identity Details</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input name="fullName" type="text" class="form-control" placeholder="John Michael Doe" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth *</label>
+            <input name="dob" type="date" class="form-control" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Gender *</label>
+            <div class="radio-group">
+              <label class="radio-opt"><input type="radio" name="gender" value="Male" required> Male</label>
+              <label class="radio-opt"><input type="radio" name="gender" value="Female"> Female</label>
+              <label class="radio-opt"><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
+              <label class="radio-opt"><input type="radio" name="gender" value="Prefer not to say"> Prefer not to say</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nationality *</label>
+            <select name="nationality" class="form-control" required>
+              <option value="">Select nationality</option>
+              <option>Indian</option><option>American</option><option>British</option>
+              <option>Canadian</option><option>Australian</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Marital Status</label>
+            <select name="maritalStatus" class="form-control">
+              <option value="">Select status</option>
+              <option>Single</option><option>Married</option>
+              <option>Divorced</option><option>Widowed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Contact -->
+      <div class="f-section">
+        <div class="f-section-title">Contact Information</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input name="email" type="email" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Number *</label>
+            <input name="mobile" type="tel" class="form-control" placeholder="+91 98765 43210" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alternate Phone</label>
+            <input name="altPhone" type="tel" class="form-control" placeholder="+91 98765 43211">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Address -->
+      <div class="f-section">
+        <div class="f-section-title">Address Details</div>
+        <div class="grid-2">
+          <div class="form-group full">
+            <label class="form-label">Current Address *</label>
+            <input name="currentAddress" type="text" class="form-control" placeholder="House No, Street, Area" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Permanent Address</label>
+            <input name="permanentAddress" type="text" class="form-control" placeholder="Same as current or different">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <input name="city" type="text" class="form-control" placeholder="Mumbai" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State *</label>
+            <input name="state" type="text" class="form-control" placeholder="Maharashtra" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country *</label>
+            <select name="country" class="form-control" required>
+              <option value="">Select country</option>
+              <option>India</option><option>United States</option><option>United Kingdom</option>
+              <option>Canada</option><option>Australia</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Postal / ZIP Code *</label>
+            <input name="postalCode" type="text" class="form-control" placeholder="400001" required maxlength="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btn-submit">Save &amp; Continue →</button>
+        <button type="reset"  class="btn btn-secondary">Reset</button>
+        <a href="/pages/dashboard.html" class="btn btn-ghost">← Dashboard</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// FIX 10: Use return value of Auth.required() — avoids redundant second localStorage read
+const _user = Auth.required();
+buildNav();
+
+if (_user) {
+  const nameField  = document.querySelector('[name="fullName"]');
+  const emailField = document.querySelector('[name="email"]');
+  if (nameField  && !nameField.value  && _user.name)  nameField.value  = _user.name;
+  if (emailField && !emailField.value && _user.email) emailField.value = _user.email;
+}
+
+async function submitPersonal(e) {
+  e.preventDefault();
+  const data = collectForm('personal-form');
+  const btn  = document.getElementById('btn-submit');
+  setLoading(btn, true);
+  try {
+    const res = await apiPost('/personal', data);
+    if (res.status === 'ok') {
+      Progress.mark('personal');
+      toast('Personal information saved!', 'ok');
+      setTimeout(() => location.href = '/pages/education.html', 900);
+    } else {
+      toast(res.message || 'Save failed', 'err');
+    }
+  } catch {
+    toast('Server error — is the Java backend running?', 'err');
+  } finally { setLoading(btn, false) }
+}
+</script>
+</body>
+</html>

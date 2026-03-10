@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppPortal — Sign In / Register</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.auth-wrap{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:100px 20px 60px;position:relative;z-index:1}
+.feat-item{display:flex;align-items:center;gap:10px;padding:6px 0}
+.brand-side{
+  flex:1;max-width:420px;display:flex;flex-direction:column;gap:20px;
+  padding:48px 40px;
+}
+.brand-side .display{font-size:clamp(2rem,4vw,3.2rem)}
+.form-side{flex:1;max-width:460px}
+@media(max-width:900px){.auth-wrap{flex-direction:column;align-items:center}.brand-side{padding:20px;text-align:center;max-width:500px}}
+.error-msg{
+  color:var(--danger);font-size:.82rem;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);
+  border-radius:8px;padding:10px 14px;display:none;
+}
+.error-msg.visible{display:block}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<nav class="nav" id="nav"></nav>
+
+<div class="auth-wrap">
+  <!-- Brand left -->
+  <div class="brand-side">
+    <div class="pill">Secure Access</div>
+    <h1 class="display">Your portal<br>awaits you</h1>
+    <p class="subtitle">Create your account or sign in to continue your application journey.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+      <div class="feat-item">
+        <span style="color:var(--success);font-size:1.1rem">✓</span>
+        <span style="font-size:.88rem;color:var(--txt-2)">SHA-256 password hashing via Java backend</span>
+      </div>
+      <div class="feat-item">
+        <span style="color:var(--success);font-size:1.1rem">✓</span>
+        <span style="font-size:.88rem;color:var(--txt-2)">Session token based authentication</span>
+      </div>
+      <div class="feat-item">
+        <span style="color:var(--success);font-size:1.1rem">✓</span>
+        <span style="font-size:.88rem;color:var(--txt-2)">Data persisted on Java 21 HTTP server</span>
+      </div>
+    </div>
+    <a href="/index.html" class="btn btn-ghost" style="align-self:flex-start;margin-top:10px">← Back to Home</a>
+  </div>
+
+  <!-- Form right -->
+  <div class="form-side">
+    <div class="card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <div id="error-box" class="error-msg"></div>
+
+      <!-- LOGIN -->
+      <form id="form-login" onsubmit="doLogin(event)">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input name="email" type="email" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input name="password" type="password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-full" id="btn-login">Sign In →</button>
+          <button type="reset" class="btn btn-ghost w-full">Reset</button>
+        </div>
+      </form>
+
+      <!-- REGISTER (hidden by default) -->
+      <form id="form-register" class="hidden" onsubmit="doRegister(event)">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input name="name" type="text" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input name="email" type="email" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input name="password" id="reg-pass" type="password" class="form-control" placeholder="Min 6 chars" required minlength="6">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input name="confirm" id="reg-confirm" type="password" class="form-control" placeholder="Repeat password" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-full" id="btn-register">Create Account →</button>
+          <button type="reset" class="btn btn-ghost w-full">Reset</button>
+        </div>
+      </form>
+
+      <div class="divider">or</div>
+      <p class="text-sm text-center" style="text-align:center">
+        Powered by <span style="color:var(--accent);font-weight:500">Java 21 HttpServer</span> backend
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// FIX 7: Redirect already-logged-in users to dashboard — prevents back-button login loop
+if (Auth.get()) { location.replace('/pages/dashboard.html'); }
+
+buildNav();
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+  hideError();
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-box');
+  b.textContent = msg; b.classList.add('visible');
+}
+function hideError() { document.getElementById('error-box').classList.remove('visible') }
+
+async function doLogin(e) {
+  e.preventDefault(); hideError();
+  const data = collectForm('form-login');
+  const btn  = document.getElementById('btn-login');
+  setLoading(btn, true);
+  try {
+    const res = await apiPost('/auth/login', data);
+    if (res.status === 'ok') {
+      Auth.save({ name: res.name, token: res.token, id: res.id, email: data.email });
+      setTimeout(() => location.href = '/pages/dashboard.html', 800);
+    } else {
+      showError(res.message || 'Login failed');
+    }
+  } catch (err) {
+    showError('Cannot connect to server. Is the Java backend running?');
+  } finally { setLoading(btn, false) }
+}
+
+async function doRegister(e) {
+  e.preventDefault(); hideError();
+  const pass    = document.getElementById('reg-pass').value;
+  const confirm = document.getElementById('reg-confirm').value;
+  if (pass !== confirm) { showError('Passwords do not match'); return; }
+
+  const data = collectForm('form-register');
+  const btn  = document.getElementById('btn-register');
+  setLoading(btn, true);
+  try {
+    const res = await apiPost('/auth/register', data);
+    if (res.status === 'ok') {
+      Auth.save({ name: res.name, token: res.token, id: res.id, email: data.email });
+      setTimeout(() => location.href = '/pages/dashboard.html', 800);
+    } else {
+      showError(res.message || 'Registration failed');
+    }
+  } catch (err) {
+    showError('Cannot connect to server. Is the Java backend running?');
+  } finally { setLoading(btn, false) }
+}
+</script>
+</body>
+</html>
